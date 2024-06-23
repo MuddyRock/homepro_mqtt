@@ -16,14 +16,12 @@ import logging
 import time
 from datetime import datetime
 
-defn = False
-
 mqtt2homeassistant = True
 if mqtt2homeassistant:
 	defn = True
+	loop_count = 1
 else:
 	defn = False
-loop_count = 1
 
 # Add and setup logging to a file in /root/mqtt which is also where  I  store the  script
 logging.basicConfig(filename='/root/mqtt/mqtt.log',filemode='a',format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',datefmt='%H:%M:%S',level=logging.ERROR)
@@ -177,8 +175,8 @@ while True:
 	except:
 		logger.error("Error in publishing MQTT data")
 	time.sleep(5)
-	loop_count += 1
 	if mqtt2homeassistant:
+		loop_count += 1
 		if loop_count > 99:
 			loop_count = 1
 			defn = True

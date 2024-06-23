@@ -1,13 +1,3 @@
-#To do:
-# - variable for meter serial number
-# - change unit for consumption to Wh and get Home Assistant to divide the mWh value by the divisor in the consumption message
-# - tidy-up and add logging
-# - neater publishing of the JSON message
-# - add auto-discover message for HA for gas
-
-# To use: replace <serial> in several places below (use search/replace) with your meter serial number
-# Note: currently only electic meter - instructions above may change slightly once gas is added
-
 import os
 import configparser
 import requests
@@ -163,11 +153,11 @@ while True:
 			ret3 = client.publish("homepro/gas_meter", gas_meter_consumption)
 			ret4 = client.publish("homepro/gas_meter_status", gas_meter_status)
 		if defn:
-			mqtt_message = str({'name': 'Instantaneous Consumption', 'state_topic': 'homepro/elec_meter', 'device_class': 'power', 'unique_id': 'elec<serial>_insta_demand', 'unit_of_measurement': 'W', 'device': {'name': 'Electricity Meter <serial>', 'identifiers': ['elec <serial>']}, 'value_template': '{{ value_json.consum.instdmand }}'}) 
+			mqtt_message = str({'name': 'Instantaneous Consumption', 'state_topic': 'homepro/elec_meter', 'device_class': 'power', 'unique_id': 'elec21E5031435_insta_demand', 'unit_of_measurement': 'W', 'device': {'name': 'Electricity Meter 21E5031435', 'identifiers': ['elec21E5031435']}, 'value_template': '{{ value_json.consum.instdmand }}'}) 
 			mqtt_message = mqtt_message.replace("'",'"')
 			client.publish("homeassistant/sensor/elec21E5031435_insta_demand/config",mqtt_message,retain=True)
 
-			mqtt_message = str({'name': 'Total Consumption', 'state_topic': 'homepro/elec_meter', 'device_class': 'energy', 'unique_id': 'elec<serial>_total_consum', 'unit_of_measurement': 'mWh', 'device': {'name': 'Electricity Meter <serial>', 'identifiers': ['elec <serial>']}, 'value_template': '{{ value_json.consum.consumption }}'}) 
+			mqtt_message = str({'name': 'Total Consumption', 'state_topic': 'homepro/elec_meter', 'device_class': 'energy', 'unique_id': 'elec21E5031435_total_consum', 'unit_of_measurement': 'kWh', 'device': {'name': 'Electricity Meter 21E5031435', 'identifiers': ['elec21E5031435']}, 'value_template': '{{ (value_json.consum.consumption / ((value_json.consum.raw.divisor) | int(base=16)))   }}'}) 
 			mqtt_message = mqtt_message.replace("'",'"')
 			client.publish("homeassistant/sensor/elec21E5031435_total_demand/config",mqtt_message, retain=True)
 

@@ -1,3 +1,13 @@
+#To do:
+# - variable for meter serial number
+# - change unit for consumption to Wh and get Home Assistant to divide the mWh value by the divisor in the consumption message
+# - tidy-up and add logging
+# - neater publishing of the JSON message
+# - add auto-discover message for HA for gas
+
+# To use: replace <serial> in several places below (use search/replace) with your meter serial number
+# Note: currently only electic meter - instructions above may change slightly once gas is added
+
 import os
 import configparser
 import requests
@@ -5,6 +15,15 @@ import paho.mqtt.client as mqtt
 import logging
 import time
 from datetime import datetime
+
+defn = False
+
+mqtt2homeassistant = True
+if mqtt2homeassistant:
+	defn = True
+else:
+	defn = False
+loop_count = 1
 
 # Add and setup logging to a file in /root/mqtt which is also where  I  store the  script
 logging.basicConfig(filename='/root/mqtt/mqtt.log',filemode='a',format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',datefmt='%H:%M:%S',level=logging.ERROR)
@@ -145,6 +164,21 @@ while True:
 		if gas_meter:
 			ret3 = client.publish("homepro/gas_meter", gas_meter_consumption)
 			ret4 = client.publish("homepro/gas_meter_status", gas_meter_status)
+		if defn:
+			mqtt_message = str({'name': 'Instantaneous Consumption', 'state_topic': 'homepro/elec_meter', 'device_class': 'power', 'unique_id': 'elec<serial>_insta_demand', 'unit_of_measurement': 'W', 'device': {'name': 'Electricity Meter <serial>', 'identifiers': ['elec <serial>']}, 'value_template': '{{ value_json.consum.instdmand }}'}) 
+			mqtt_message = mqtt_message.replace("'",'"')
+			client.publish("homeassistant/sensor/elec21E5031435_insta_demand/config",mqtt_message,retain=True)
+
+			mqtt_message = str({'name': 'Total Consumption', 'state_topic': 'homepro/elec_meter', 'device_class': 'energy', 'unique_id': 'elec<serial>_total_consum', 'unit_of_measurement': 'mWh', 'device': {'name': 'Electricity Meter <serial>', 'identifiers': ['elec <serial>']}, 'value_template': '{{ value_json.consum.consumption }}'}) 
+			mqtt_message = mqtt_message.replace("'",'"')
+			client.publish("homeassistant/sensor/elec21E5031435_total_demand/config",mqtt_message, retain=True)
+
+			defn = False
 	except:
 		logger.error("Error in publishing MQTT data")
 	time.sleep(5)
+	loop_count += 1
+	if mqtt2homeassistant:
+		if loop_count > 99:
+			loop_count = 1
+			defn = True
